@@ -93,6 +93,28 @@ const herotravels = async () => {
             const result = await bookingCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
+        app.put('/admin/package/update/:packageID', async (req, res) => {
+            const packageId = req.params.packageID;
+            const updateData = req.body;
+            const filter = { _id: ObjectId(packageId) };
+            const options = { upsert: false };
+            const updateDoc = {
+                $set: {
+                    title: updateData.title,
+                    days: updateData.days,
+                    nights: updateData.nights,
+                    price: updateData.price,
+                    besttime: updateData.besttime,
+                    places: updateData.places,
+                    attraction: updateData.attraction,
+                    theme: updateData.theme,
+                    overview: updateData.overview,
+                },
+            };
+
+            const result = await packagesCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
 
         app.delete('/admin/tour/:bookingID', async (req, res) => {
             const bookingId = req.params.bookingID;
