@@ -38,13 +38,58 @@ const herotravels = async () => {
 
         app.put('/user/tour/:bookingID', async (req, res) => {
             const bookingId = req.params.bookingID;
+            const bookingStatus = req.query.action;
             const filter = { _id: ObjectId(bookingId) };
             const options = { upsert: false };
             const updateDoc = {
                 $set: {
-                    bookingStatus: 'cancel'
+                    bookingStatus
                 },
             };
+            const result = await bookingCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
+        app.delete('/user/tour/:bookingID', async (req, res) => {
+            const bookingId = req.params.bookingID;
+            const query = { _id: ObjectId(bookingId) };
+            const result = await bookingCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        app.put('/user/tour/update/:bookingID', async (req, res) => {
+            const bookingId = req.params.bookingID;
+            const userRole = req.query.role;
+            const updateData = req.body;
+            const filter = { _id: ObjectId(bookingId) };
+            const options = { upsert: false };
+            let updateDoc;
+            if (userRole === 'admin') {
+                updateDoc = {
+                    $set: {
+                        userCountry: updateData.userCountry,
+                        fullName: updateData.fullName,
+                        email: updateData.email,
+                        bookingStatus: updateData.bookingStatus,
+                        finalPrice: updateData.finalPrice,
+                        journeyDate: updateData.journeyDate,
+                        adults: updateData.adults,
+                        children: updateData.children,
+                        contactNo: updateData.contactNo,
+                    },
+                };
+            }
+            else {
+                updateDoc = {
+                    $set: {
+                        journeyDate: updateData.journeyDate,
+                        adults: updateData.adults,
+                        children: updateData.children,
+                        contactNo: updateData.contactNo,
+                        message: updateData.message,
+                    },
+                };
+            }
             const result = await bookingCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
@@ -67,6 +112,12 @@ const herotravels = async () => {
         app.get('/packages', async (req, res) => {
             const packages = packagesCollection.find({});
             const result = await packages.toArray();
+            res.send(result);
+        })
+
+        app.get('/tours', async (req, res) => {
+            const bookings = bookingCollection.find({});
+            const result = await bookings.toArray();
             res.send(result);
         })
 
