@@ -18,24 +18,67 @@ const herotravels = async () => {
         const packagesCollection = client.db('herotravel').collection('packages');
         const bookingCollection = client.db('herotravel').collection('bookings');
 
+        // Get All Packages 
+        app.get('/packages', async (req, res) => {
+            const packages = packagesCollection.find({});
+            const result = await packages.toArray();
+            res.send(result);
+        })
+        // Post New Package 
         app.post('/packages', async (req, res) => {
             const tourpackage = req.body;
             const result = await packagesCollection.insertOne(tourpackage);
             res.send(result);
         })
+        // Get Specific Package Information 
+        app.get('/packages/:tourPackageID', async (req, res) => {
+            const packageId = req.params.tourPackageID;
+            const query = { _id: ObjectId(packageId) };
+            const result = await packagesCollection.findOne(query);
+            res.send(result);
+        })
+        // Get Only Title of All packages 
+        app.get('/titles', async (req, res) => {
+            const packages = packagesCollection.find({}).project({ title: 1 });;
+            const result = await packages.toArray();
+            res.send(result);
+        })
+        // Insert New Booking 
         app.post('/booking', async (req, res) => {
             const tourpackage = req.body;
             const result = await bookingCollection.insertOne(tourpackage);
             res.send(result);
         })
-
+        // Get All Booking Information 
+        app.get('/tours', async (req, res) => {
+            const bookings = bookingCollection.find({});
+            const result = await bookings.toArray();
+            res.send(result);
+        })
+        // Get Specific Booking Information By BookingID
         app.get('/user/tour', async (req, res) => {
             const bookingId = req.query.bookingid;
             const query = { _id: ObjectId(bookingId) };
             const packages = await bookingCollection.findOne(query);
             res.send(packages);
         })
+        // Get All List of Booking By User Email 
+        app.get('/user/bookingshistory', async (req, res) => {
+            const email = req.query.q;
+            const query = { email };
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result);
+        })
+        app.post('/user/tour', async (req, res) => {
+            const packageIds = req.body;
+            const query = { packageID: { $in: packageIds } };
+            const packages = await bookingCollection.find(query).toArray();
+            res.send(packages);
+        })
 
+        // Admin Section 
+        // Update Booking Status of Specific Booking
+        // Trigger When Pressed in Cancel or Confirm Button  
         app.put('/user/tour/:bookingID', async (req, res) => {
             const bookingId = req.params.bookingID;
             const bookingStatus = req.query.action;
@@ -49,14 +92,15 @@ const herotravels = async () => {
             const result = await bookingCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
-
+        // Delete Booking Information having Status Pending or Cancel
         app.delete('/user/tour/:bookingID', async (req, res) => {
             const bookingId = req.params.bookingID;
             const query = { _id: ObjectId(bookingId) };
             const result = await bookingCollection.deleteOne(query);
             res.send(result);
         })
-
+        // Update Booking Information for both role of User and Admin 
+        // Role Found by Query Parameter role 
         app.put('/user/tour/update/:bookingID', async (req, res) => {
             const bookingId = req.params.bookingID;
             const userRole = req.query.role;
@@ -64,6 +108,7 @@ const herotravels = async () => {
             const filter = { _id: ObjectId(bookingId) };
             const options = { upsert: false };
             let updateDoc;
+            // for Admin 
             if (userRole === 'admin') {
                 updateDoc = {
                     $set: {
@@ -79,6 +124,7 @@ const herotravels = async () => {
                     },
                 };
             }
+            // For Normal User 
             else {
                 updateDoc = {
                     $set: {
@@ -93,6 +139,7 @@ const herotravels = async () => {
             const result = await bookingCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
+        // Update Specific Package Information 
         app.put('/admin/package/update/:packageID', async (req, res) => {
             const packageId = req.params.packageID;
             const updateData = req.body;
@@ -111,11 +158,10 @@ const herotravels = async () => {
                     overview: updateData.overview,
                 },
             };
-
             const result = await packagesCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
-
+        // Delete Specific Booking from admin panel
         app.delete('/admin/tour/:bookingID', async (req, res) => {
             const bookingId = req.params.bookingID;
             console.log(bookingId)
@@ -124,44 +170,6 @@ const herotravels = async () => {
             res.send(packages);
         })
 
-        app.post('/user/tour', async (req, res) => {
-            const packageIds = req.body;
-            const query = { packageID: { $in: packageIds } };
-            const packages = await bookingCollection.find(query).toArray();
-            res.send(packages);
-        })
-
-        app.get('/packages', async (req, res) => {
-            const packages = packagesCollection.find({});
-            const result = await packages.toArray();
-            res.send(result);
-        })
-
-        app.get('/tours', async (req, res) => {
-            const bookings = bookingCollection.find({});
-            const result = await bookings.toArray();
-            res.send(result);
-        })
-
-        app.get('/titles', async (req, res) => {
-            const packages = packagesCollection.find({}).project({ title: 1 });;
-            const result = await packages.toArray();
-            res.send(result);
-        })
-
-        app.get('/user/bookingshistory', async (req, res) => {
-            const email = req.query.q;
-            const query = { email };
-            const result = await bookingCollection.find(query).toArray();
-            res.send(result);
-        })
-
-        app.get('/packages/:tourPackageID', async (req, res) => {
-            const packageId = req.params.tourPackageID;
-            const query = { _id: ObjectId(packageId) };
-            const result = await packagesCollection.findOne(query);
-            res.send(result);
-        })
     }
     finally {
     }
